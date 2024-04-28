@@ -188,20 +188,38 @@ export class Stroke2D extends gfx.Node3
      * @param skyRadius The radius of the sky sphere the stroke is projected onto.
      * @returns A new Mesh3 that holds the projected version of the stroke and can be added to the scene.
      */
-    public createSkyStrokeMesh(camera: gfx.Camera, skyRadius: number): gfx.Mesh3
-    {
-        // TODO: Part 1: Draw Sky Strokes
+    public createSkyStrokeMesh(camera: gfx.Camera, skyRadius: number): gfx.Mesh3 {
+        const stroke = new gfx.Mesh3();
+        stroke.material = new gfx.UnlitMaterial();
+        stroke.material.setColor(this.color);
+        const sphere = new gfx.BoundingSphere;
+        sphere.radius = skyRadius;
+    
+        const newvertices3D: gfx.Vector3[] = [];
+        const newindices: number[] = [];
+    
+        for (let i = 0; i < this.path.length; i++) {
+            const point = new gfx.Vector2(this.path[i].x, this.path[i].y);
+            const ray = new gfx.Ray3();
+            ray.setPickRay(point, camera);
 
-        // Hint #1: The Ray class in GopherGfx has an intersectsSphere() routine that you can use to
-        // project the stroke2D onto a "sky sphere".
-
-        // Hint #2: When creating a new Mesh3, you can setup its material to be the same color as the stroke2D with:
-        // newMesh.material = new gfx.UnlitMaterial();
-        // newMesh.material.setColor(stroke2D.color);
-
-
-        return new gfx.Mesh3();
+            const intersection = ray.intersectsSphere(sphere);
+    
+            if (intersection) {
+                //need two to make a square
+                newvertices3D.push(intersection);
+                newindices.push(i);
+            }
+        }
+    
+        // Set the vertices and indices of the stroke
+        stroke.setVertices(newvertices3D);
+        stroke.setIndices(newindices);
+        return stroke;
     }
+    
+    
+    
 
 
     /** 
