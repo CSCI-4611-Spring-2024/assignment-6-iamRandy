@@ -1,4 +1,5 @@
 /* Assignment 6: A World Made of Drawings
+ * Randy Thai
  * Original C++ implementation by UMN CSCI 4611 Instructors, 2018+
  * GopherGfx implementation by Evan Suma Rosenberg <suma@umn.edu>, 2022-2024
  * Refactoring by Daniel Keefe, Fall 2023
