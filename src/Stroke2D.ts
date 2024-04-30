@@ -196,32 +196,25 @@ export class Stroke2D extends gfx.Node3
         sphere.radius = skyRadius;
     
         const newvertices3D: gfx.Vector3[] = [];
-        const newindices: number[] = [];
     
-        for (let i = 0; i < this.path.length; i++) {
-            const point = new gfx.Vector2(this.path[i].x, this.path[i].y);
+        for (let i = 0; i < this.vertices.length; i++) {
+            const point = this.vertices[i];
             const ray = new gfx.Ray3();
             ray.setPickRay(point, camera);
 
             const intersection = ray.intersectsSphere(sphere);
     
             if (intersection) {
-                //need two to make a square
                 newvertices3D.push(intersection);
-                newindices.push(i);
             }
         }
     
         // Set the vertices and indices of the stroke
         stroke.setVertices(newvertices3D);
-        stroke.setIndices(newindices);
+        stroke.setIndices(this.indices);
         return stroke;
     }
     
-    
-    
-
-
     /** 
      * Creates and returns a new Billboard object by projecting the Stroke2D drawn by the user onto a 3D plane.
      * The plane is defined by a point within the plane (anchorPointWorld) and a normal, which points from the
@@ -249,8 +242,34 @@ export class Stroke2D extends gfx.Node3
         // Hint #2: When creating a new Mesh3, you can setup it's material to be the same color as the stroke2D with:
         // newMesh.material = new gfx.UnlitMaterial();
         // newMesh.material.setColor(stroke2D.color);
+        const billboardMesh = new gfx.Mesh3();
+        billboardMesh.material = new gfx.UnlitMaterial;
+        billboardMesh.material.setColor(this.color);
 
+        const newBillboardVert: gfx.Vector3[] = [];
+        
+        const normal = gfx.Vector3.subtract(camera.position, anchorPointWorld); //used for camera stuff
+        normal.y = 0;
+        normal.normalize();
 
-        return new Billboard(new gfx.Vector3(0,0,0), new gfx.Vector3(0,0,0), new gfx.Mesh3());
+        const plane = new gfx.Plane3(anchorPointWorld, normal); //create a plane for intersections
+
+        for (let i = 0; i < this.vertices.length; i++) {
+            const point = new gfx.Vector2(this.vertices[i].x, this.vertices[i].y);
+            const ray = new gfx.Ray3();
+            ray.setPickRay(point, camera);
+
+            const intersectionPoint = ray.intersectsPlane(plane); //see where it intersects ground
+            if (intersectionPoint !== null) {
+                newBillboardVert.push(intersectionPoint);
+            } else {
+                console.log("invalid point");
+            }
+        }
+
+        billboardMesh.setVertices(newBillboardVert);
+        billboardMesh.setIndices(this.indices);
+        
+        return new Billboard(anchorPointWorld, normal, billboardMesh);
     }
 }

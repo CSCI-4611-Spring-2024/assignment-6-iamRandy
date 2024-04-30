@@ -86,9 +86,40 @@ export class Ground extends gfx.Mesh3
         // 3. Loop through all of the vertices of the ground mesh, and adjust the height of each based on 
         // the equations in section 4.5 of the paper.  Note, the equations rely upon a function
         // h(), and we have implemented that for you as computeH() defined below.
-
         
+        //part 1: define plane
+        const normal = gfx.Vector3.subtract(groundEndPoint, groundStartPoint);
+        normal.y = 0;
+        normal.normalize();
+        const plane = new gfx.Plane3(groundStartPoint, normal);
 
+        //part 2: project the user's stroke onto the projection plane
+        const silhouetteCurve: gfx.Vector3[] = [];
+        for (let i = 0; i < stroke2D.path.length; i++) {
+            const point = stroke2D.path[i];
+            const ray = new gfx.Ray3();
+            ray.setPickRay(point, camera);
+            const intersectionPoint = ray.intersectsPlane(plane);
+            if (intersectionPoint) {
+                silhouetteCurve.push(intersectionPoint);
+            }
+        }
+
+        //part 3: loop through all of the vertices of the ground mesh, and adjust the height of each
+        for (let i = 0; i < this.vertices.length; i++) {
+            const vertex = this.vertices[i];
+            const ray = new gfx.Ray3();
+            ray.set(vertex, normal);
+            const closestPoint = ray.intersectsPlane(plane);
+            
+            if (closestPoint) {
+                const d = gfx.Vector3.distanceBetween(vertex, closestPoint); //distance d from P to projection plane
+                const wd = Math.max(0, 1 - Math.pow((d / 5), 2)); //w(d)
+                const h = this.computeH(closestPoint, silhouetteCurve, plane);//compute h value
+                if(h != 0)
+                    vertex.y = ((1 - wd) * vertex.y) + (wd * h);
+            }
+        }
 
         // After computing new values for the vertices, re-assign them to the mesh to push them onto
         // the graphics card and recompute new vertex normals.

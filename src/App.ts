@@ -199,7 +199,15 @@ export class App extends gfx.GfxApp
                 // Hint: The ray you use to determine the height of the ground at the camera's
                 // position is not a pick ray (because it does not pass through a pixel on the 
                 // screen).  So, you will want to use the ray set() method, not setPickRay().
+                // Create a new ray with origin at the camera's position and direction straight down
+                const ray = new gfx.Ray3();
+                ray.set(this.camera.position, new gfx.Vector3(0, -1, 0));
+                //intersection test with triangle directly underneath the camera
+                const intersectionPoint = ray.intersectsTriangle(vertex1, vertex2, vertex3);
 
+                if (intersectionPoint) {
+                    this.camera.position.y = intersectionPoint.y + this.cameraHeight;
+                }
 
             }
         }
